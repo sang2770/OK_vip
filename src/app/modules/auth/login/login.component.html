@@ -1,0 +1,65 @@
+<div class="flex items-center justify-center h-screen bg-gray-100">
+  <form
+    [formGroup]="loginForm"
+    (ngSubmit)="onSubmit()"
+    class="bg-white p-8 rounded shadow-md w-96"
+  >
+    <h1 class="text-2xl font-bold text-center mb-6">Login</h1>
+
+    <!-- Input cho Username -->
+    <div class="mb-4">
+      <label for="username" class="block text-gray-700 font-semibold mb-2"
+        >Username</label
+      >
+      <input
+        id="username"
+        type="text"
+        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
+        formControlName="username"
+        placeholder="Enter your username"
+      />
+      <div
+        *ngIf="
+          loginForm.get('username')?.invalid &&
+          loginForm.get('username')?.touched
+        "
+        class="text-red-500 text-sm"
+      >
+        Username is required and must be at least 3 characters.
+      </div>
+    </div>
+
+    <!-- Input cho Password -->
+    <div class="mb-6">
+      <label for="password" class="block text-gray-700 font-semibold mb-2"
+        >Password</label
+      >
+      <input
+        id="password"
+        type="password"
+        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
+        formControlName="password"
+        placeholder="Enter your password"
+      />
+      <div
+        *ngIf="
+          loginForm.get('password')?.invalid &&
+          loginForm.get('password')?.touched
+        "
+        class="text-red-500 text-sm"
+      >
+        Password is required and must be at least 6 characters.
+      </div>
+    </div>
+
+
+    <!-- Nút Submit -->
+    <button
+      type="submit"
+      class="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition"
+      [disabled]="loginForm.invalid"
+    >
+      Login
+    </button>
+  </form>
+</div>

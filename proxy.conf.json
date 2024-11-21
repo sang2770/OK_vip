@@ -1,0 +1,11 @@
+{
+    "/api": {
+      "target": "https://market.okvip.business",
+      "secure": false,
+      "changeOrigin": true,
+      "headers": {
+        "Referer": "https://market.okvip.business"
+      }
+    }
+  }
+  
