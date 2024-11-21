@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, NgZone } from '@angular/core';
+import { ChangeDetectorRef, Component, NgZone, OnDestroy } from '@angular/core';
 import { LocalStorageService } from '../../../shared/services/local-storage.service';
 import { BookingService } from './booking.service';
 import {
@@ -20,7 +20,7 @@ import {
   templateUrl: './booking-list.component.html',
   styleUrl: './booking-list.component.scss',
 })
-export class BookingListComponent {
+export class BookingListComponent implements OnDestroy {
   username?: string;
   cnt = 0;
   source$ = interval(1000);
@@ -35,6 +35,9 @@ export class BookingListComponent {
     private ngZone: NgZone
   ) {
     this.username = this.localStorageService.getItem('username') ?? '';
+  }
+  ngOnDestroy(): void {
+    this.onEnd();
   }
 
   onStart() {
@@ -60,7 +63,7 @@ export class BookingListComponent {
             data.forEach((item) => {
               if (
                 item._id &&
-                (item.require?.words >= 1000) &&
+                item.require?.words >= 1000 &&
                 !this.receiveIds.has(item._id) &&
                 item.require?.category !== 'Guestpost'
               ) {

@@ -7,6 +7,7 @@ import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { AppComponent } from './app.component';
 import { DragDropModule } from '@angular/cdk/drag-drop';
+import { SharedModule } from './shared/shared.module';
 
 @NgModule({
   declarations: [AppComponent],
@@ -16,8 +17,10 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
     FormsModule,
     BrowserAnimationsModule,
     AppRoutingModule,
-    DragDropModule
+    DragDropModule,
+    SharedModule
   ],
   bootstrap: [AppComponent],
+  
 })
 export class AppModule { }

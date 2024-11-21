@@ -1,6 +1,6 @@
 {
   "hosting": {
-    "public": "public",
+    "public": "dist/ok-vip/browser",
     "ignore": [
       "firebase.json",
       "**/.*",
@@ -12,5 +12,6 @@
         "destination": "/index.html"
       }
     ]
+
   }
 }

@@ -1,22 +1,24 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { provideHttpClient } from '@angular/common/http';
-
-
+import {
+  HTTP_INTERCEPTORS,
+  provideHttpClient,
+  withInterceptorsFromDi,
+} from '@angular/common/http';
+import { AuthInterceptor } from '../auth.interceptor';
 
 @NgModule({
   declarations: [],
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    FormsModule,
+  imports: [CommonModule, ReactiveFormsModule, FormsModule],
+  exports: [CommonModule, ReactiveFormsModule, FormsModule],
+  providers: [
+    provideHttpClient(withInterceptorsFromDi()),
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: AuthInterceptor,
+      multi: true,
+    },
   ],
-  exports: [
-    CommonModule,
-    ReactiveFormsModule,
-    FormsModule,
-  ],
-  providers: [provideHttpClient()] 
 })
-export class SharedModule { }
+export class SharedModule {}
