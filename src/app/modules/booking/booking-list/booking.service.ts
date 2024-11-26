@@ -17,7 +17,7 @@ export class BookingService {
 
   buildHeader() {
     // Khóa mã hóa
-    const key = 'blackmythwukong2211@sssddmsseewqrrr';
+    const key = 'blackmythwukong2211sssddmsseewqrrr';
     console.log(new Date(Date.now()).toISOString());
     
     return {
