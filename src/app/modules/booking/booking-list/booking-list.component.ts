@@ -1,4 +1,11 @@
-import { ChangeDetectorRef, Component, NgZone, OnDestroy } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  NgZone,
+  OnChanges,
+  OnDestroy,
+  SimpleChanges,
+} from '@angular/core';
 import { LocalStorageService } from '../../../shared/services/local-storage.service';
 import { BookingService } from './booking.service';
 import {
@@ -12,6 +19,7 @@ import {
   tap,
   timeout,
 } from 'rxjs';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-booking-list',
@@ -25,17 +33,44 @@ export class BookingListComponent implements OnDestroy {
   stopSubject = new Subject<void>();
   isRunning = false;
   receiveIds = new Set<string>();
+  dateFilter: string;
+  categories: string[] = ['Trang chủ', 'Guest post'];
+  tempCategory: string = '';
+  limit = 30;
 
   constructor(
     private localStorageService: LocalStorageService,
     private bookingService: BookingService,
     private cdr: ChangeDetectorRef,
-    private ngZone: NgZone
+    private ngZone: NgZone,
+    private router: Router
   ) {
+    const now = new Date();
+    now.setDate(now.getDate() + 1);
     this.username = this.localStorageService.getItem('username') ?? '';
+    this.categories = this.localStorageService.getItem('categories') ?? [
+      'Trang chủ',
+      'Guest post',
+    ];
+    this.dateFilter =
+      this.localStorageService.getItem('dateFilter') ??
+      now.toISOString().split('T')[0];
+    this.limit = this.localStorageService.getItem('limit') ?? 30;
+  }
+  onChange() {
+    this.localStorageService.setItem('dateFilter', this.dateFilter);
+    this.localStorageService.setItem('categories', this.categories); 
+    this.localStorageService.setItem('limit', this.limit);
   }
   ngOnDestroy(): void {
     this.onEnd();
+  }
+
+  onLogout() {
+    this.localStorageService.removeItem('token');
+    this.localStorageService.removeItem('username');
+    this.router.navigate(['/']);
+    this.localStorageService.clear();
   }
 
   onStart() {
@@ -43,6 +78,7 @@ export class BookingListComponent implements OnDestroy {
       if (this.isRunning) return;
 
       this.isRunning = true;
+      this.cdr.detectChanges();
       this.stopSubject = new Subject<void>();
 
       this.source$.pipe(takeUntil(this.stopSubject)).subscribe(() => {
@@ -59,11 +95,20 @@ export class BookingListComponent implements OnDestroy {
             const data: any[] = res.data ?? [];
 
             data.forEach((item) => {
+              if (!item.require?.expiresDate) return;
+              const time = new Date(item.require.expiresDate);
+              if (isNaN(time.getTime())) return;
+              time.setHours(0, 0, 0, 0);
+              const currentTime = this.dateFilter
+                ? new Date(this.dateFilter)
+                : new Date();
+              currentTime.setHours(0, 0, 0, 0);
               if (
                 item._id &&
                 item.require?.words >= 1000 &&
                 !this.receiveIds.has(item._id) &&
-                item.require?.category !== 'Guestpost'
+                !this.categories.includes(item.require?.category) &&
+                time > currentTime
               ) {
                 this.receiveIds.add(item._id);
                 console.log(item);
@@ -73,15 +118,18 @@ export class BookingListComponent implements OnDestroy {
                   .pipe(
                     tap((book) => {
                       if (book.success) {
-                        this.cnt++;
+                        this.ngZone.run(() => {
+                          this.cnt++;
+                          if (this.limit && this.cnt > this.limit) {
+                            this.cnt = 0;
+                            this.onEnd();
+                          }
+                        });
                       }
                     })
                   )
                   .subscribe();
               }
-            });
-            this.ngZone.run(() => {
-              this.cdr.detectChanges();
             });
           });
       });
@@ -90,7 +138,17 @@ export class BookingListComponent implements OnDestroy {
   onEnd() {
     if (!this.isRunning) return;
     this.isRunning = false;
+    this.cdr.detectChanges();
     this.stopSubject.next();
     this.stopSubject.complete();
+  }
+
+  removeCategory(category: string) {
+    this.categories = this.categories.filter((item) => item !== category);
+  }
+
+  addCategory() {
+    this.categories.push(this.tempCategory);
+    this.tempCategory = '';
   }
 }

@@ -9,10 +9,11 @@ import {
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { Router } from '@angular/router';
+import { LocalStorageService } from './shared/services/local-storage.service';
 
 @Injectable({providedIn: 'root',})
 export class AuthInterceptor implements HttpInterceptor {
-  constructor(private router: Router) {}
+  constructor(private router: Router, private localStorageService: LocalStorageService) {}
 
   intercept(
     req: HttpRequest<any>,
@@ -21,6 +22,7 @@ export class AuthInterceptor implements HttpInterceptor {
     return next.handle(req).pipe(
       catchError((error: HttpErrorResponse) => {
         if (error.status === 401) {
+          this.localStorageService.clear();
           this.router.navigate(['/']);
         }
         return throwError(() => error); 

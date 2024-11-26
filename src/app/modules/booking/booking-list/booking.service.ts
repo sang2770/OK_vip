@@ -14,9 +14,12 @@ export class BookingService {
     private storageService: LocalStorageService
   ) {}
 
+
   buildHeader() {
     // Khóa mã hóa
     const key = 'blackmythwukong2211@sssddmsseewqrrr';
+    console.log(new Date(Date.now()).toISOString());
+    
     return {
       'x-authentication': CryptoJS.AES.encrypt(
         new Date(Date.now()).toISOString(),
