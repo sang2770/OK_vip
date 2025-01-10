@@ -29,7 +29,7 @@ import { Router } from '@angular/router';
 export class BookingListComponent implements OnDestroy {
   username?: string;
   cnt = 0;
-  source$ = interval(1000);
+  source$ = interval(800);
   stopSubject = new Subject<void>();
   isRunning = false;
   receiveIds = new Set<string>();
@@ -87,8 +87,8 @@ export class BookingListComponent implements OnDestroy {
           .pipe(
             timeout(2000),
             catchError((err) => {
-              console.warn('Request failed:', err);
-              return of();
+              // console.warn('Request failed:', err);
+              return of({ data: [] });
             })
           )
           .subscribe((res) => {
@@ -111,13 +111,12 @@ export class BookingListComponent implements OnDestroy {
                 time > currentTime
               ) {
                 this.receiveIds.add(item._id);
-                console.log(item);
-
                 this.bookingService
                   .book(item._id)
                   .pipe(
                     tap((book) => {
                       if (book.success) {
+                        console.log('success', item);
                         this.ngZone.run(() => {
                           this.cnt++;
                           if (this.limit && this.cnt > this.limit) {
@@ -126,6 +125,10 @@ export class BookingListComponent implements OnDestroy {
                           }
                         });
                       }
+                    }),
+                    catchError((err) => {
+                      console.error(`Failed to book item with ID ${item._id}`, err);
+                      return of(null);
                     })
                   )
                   .subscribe();

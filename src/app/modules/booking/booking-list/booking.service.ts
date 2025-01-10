@@ -18,7 +18,7 @@ export class BookingService {
   buildHeader() {
     // Khóa mã hóa
     const key = 'blackmythwukong2211sssddmsseewqrrr';
-    console.log(new Date(Date.now()).toISOString());
+    // console.log(new Date(Date.now()).toISOString());
     
     return {
       'x-authentication': CryptoJS.AES.encrypt(
