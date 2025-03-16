@@ -59,7 +59,7 @@ export class BookingListComponent implements OnDestroy {
   }
   onChange() {
     this.localStorageService.setItem('dateFilter', this.dateFilter);
-    this.localStorageService.setItem('categories', this.categories); 
+    this.localStorageService.setItem('categories', this.categories);
     this.localStorageService.setItem('limit', this.limit);
   }
   ngOnDestroy(): void {
@@ -98,11 +98,11 @@ export class BookingListComponent implements OnDestroy {
               if (!item.require?.expiresDate) return;
               const time = new Date(item.require.expiresDate);
               if (isNaN(time.getTime())) return;
-              time.setHours(0, 0, 0, 0);
+              time.setSeconds(0, 0);
               const currentTime = this.dateFilter
                 ? new Date(this.dateFilter)
                 : new Date();
-              currentTime.setHours(0, 0, 0, 0);
+              currentTime.setSeconds(0, 0);
               if (
                 item._id &&
                 item.require?.words >= 1000 &&
