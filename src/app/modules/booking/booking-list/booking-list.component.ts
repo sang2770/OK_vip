@@ -9,9 +9,13 @@ import {
 import { LocalStorageService } from '../../../shared/services/local-storage.service';
 import { BookingService } from './booking.service';
 import {
+  Observable,
   Subject,
   catchError,
+  filter,
+  from,
   interval,
+  map,
   mergeMap,
   of,
   switchMap,
@@ -76,68 +80,74 @@ export class BookingListComponent implements OnDestroy {
   onStart() {
     this.ngZone.runOutsideAngular(() => {
       if (this.isRunning) return;
-
+  
       this.isRunning = true;
       this.cdr.detectChanges();
       this.stopSubject = new Subject<void>();
-
-      this.source$.pipe(takeUntil(this.stopSubject)).subscribe(() => {
-        this.bookingService
-          .getList()
-          .pipe(
-            timeout(2000),
-            catchError((err) => {
-              // console.warn('Request failed:', err);
-              return of({ data: [] });
-            })
-          )
-          .subscribe((res) => {
-            const data: any[] = res.data ?? [];
-
-            data.forEach((item) => {
-              if (!item.require?.expiresDate) return;
-              const time = new Date(item.require.expiresDate);
-              if (isNaN(time.getTime())) return;
-              time.setSeconds(0, 0);
-              const currentTime = this.dateFilter
-                ? new Date(this.dateFilter)
-                : new Date();
-              currentTime.setSeconds(0, 0);
-              if (
-                item._id &&
-                item.require?.words >= 1000 &&
-                !this.receiveIds.has(item._id) &&
-                !this.categories.includes(item.require?.category) &&
-                time > currentTime
-              ) {
-                this.receiveIds.add(item._id);
-                this.bookingService
-                  .book(item._id)
-                  .pipe(
-                    tap((book) => {
-                      if (book.success) {
-                        console.log('success', item);
-                        this.ngZone.run(() => {
-                          this.cnt++;
-                          if (this.limit && this.cnt > this.limit) {
-                            this.cnt = 0;
-                            this.onEnd();
-                          }
-                        });
-                      }
-                    }),
-                    catchError((err) => {
-                      console.error(`Failed to book item with ID ${item._id}`, err);
-                      return of(null);
-                    })
-                  )
-                  .subscribe();
-              }
-            });
-          });
-      });
+  
+      const currentTime = this.dateFilter ? new Date(this.dateFilter) : new Date();
+      currentTime.setSeconds(0, 0);
+  
+      this.source$
+        .pipe(
+          takeUntil(this.stopSubject),
+          switchMap(() => {
+            const start = performance.now();
+            return this.bookingService.getList().pipe(
+              timeout(2000),
+              tap(() => {
+                const end = performance.now();
+                console.log(`📡 getList() took ${Math.round(end - start)}ms`);
+              }),
+              catchError((err) => {
+                console.warn('⚠️ getList failed:', err);
+                return of({ data: [] });
+              }),
+              map((res) => res.data ?? [])
+            );
+          }),
+          switchMap((items) => from(items)),
+          filter((item: any) => {
+            if (!item._id || !item.require?.expiresDate || item.require.words < 1000) return false;
+  
+            const time = new Date(item.require.expiresDate);
+            if (isNaN(time.getTime())) return false;
+            time.setSeconds(0, 0);
+  
+            return (
+              !this.receiveIds.has(item._id) &&
+              !this.categories.includes(item.require.category) &&
+              time > currentTime
+            );
+          }),
+          tap((item) => this.receiveIds.add(item._id)), // tránh duplicate
+          mergeMap((item) => this.bookItem(item), 3) // max 3 concurrent
+        )
+        .subscribe();
     });
   }
+  
+  private bookItem(item: any): Observable<any> {
+    return this.bookingService.book(item._id).pipe(
+      tap((book) => {
+        if (book?.success) {
+          console.log('✅ Booked:', item);
+          this.ngZone.run(() => {
+            this.cnt++;
+            if (this.limit && this.cnt > this.limit) {
+              this.cnt = 0;
+              this.onEnd();
+            }
+          });
+        }
+      }),
+      catchError((err) => {
+        console.error(`❌ Failed to book item ID: ${item._id}`, err);
+        return of(null);
+      })
+    );
+  }
+
   onEnd() {
     if (!this.isRunning) return;
     this.isRunning = false;
