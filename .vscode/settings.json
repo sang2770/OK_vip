@@ -9,5 +9,6 @@
     "lupastudio.toolchainPath": "C:\\Users\\sang2.nguyen\\.lupastudio\\packages\\toolchain-gccarmnoneeabi",
     "lupastudio.sdkroot": "C:\\Users\\sang2.nguyen\\.lupastudio\\sdk",
     "cortex-debug.openocdPath": "C:\\Users\\sang2.nguyen\\.lupastudio\\sdk\\${config:lupastudio.activeSdk}\\sdk\\openocd\\bin\\openocd_mpu.exe",
-    "remote.SSH.defaultForwardedPorts": []
+    "remote.SSH.defaultForwardedPorts": [],
+    "liveServer.settings.port": 5501
 }
